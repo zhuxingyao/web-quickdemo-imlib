@@ -2,14 +2,15 @@
 import { ref } from 'vue';
 import { IAReceivedConversation, MessageDirection } from '@rongcloud/imlib-next';
 import { conversationList, timestampToDateTime, curConversation, historyMessages } from '../assets/context';
-import { _getHistoryMessages, _sendMessage, _disConnect } from '../assets/im';
+import { _getHistoryMessages, _sendMessage, _disConnect, _clearMessagesUnreadStatus } from '../assets/im';
 import { curUserId, scrollContainer, scrollContent } from '../assets/context';
 
 const message = ref<string>('');
 
-const handleConversationChange = async (item:IAReceivedConversation) => {
+const handleConversationChange = async (item: IAReceivedConversation) => {
   const { targetId, conversationType, channelId } = item;
   curConversation.value = item;
+  await _clearMessagesUnreadStatus({ targetId, conversationType, channelId });
   await _getHistoryMessages(
     { targetId, conversationType, channelId },
     { count: 20 , timestamp: 0, order: 0 },
@@ -36,6 +37,7 @@ const handleDisconnect = () => {
         <div class="rong-self-info">{{ curUserId }}</div>
         <div class="rong-chat-conversation-box">
           <div class="rong-chat-conversation"
+            :class="{ 'selected': curConversation?.targetId === item.targetId && curConversation?.conversationType === item.conversationType}"
             v-for="item in conversationList" :key="`${item.targetId}&${item.conversationType}`"
             @click="handleConversationChange(item)" 
             >
@@ -137,6 +139,9 @@ const handleDisconnect = () => {
 .rong-chat-conversation:hover {
   background-color: #b4b3b3;
 }
+.rong-chat-conversation.selected {
+  background-color: #b4b3b3;
+}
 .rong-chat-conversation .rong-chat-conversation-header {
   font-size: 12px;
   display: flex;
@@ -152,6 +157,8 @@ const handleDisconnect = () => {
   width: 60%;
   overflow: hidden;
   font-size: 12px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .rong-chat-conversation-content .time {
   font-size: 12px;
