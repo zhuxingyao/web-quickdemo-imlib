@@ -34,19 +34,22 @@ const handleDisconnect = () => {
     <div class="rong-chat-box">
       <div class="rong-chat-left">
         <div class="rong-self-info">{{ curUserId }}</div>
-        <div class="rong-chat-conversation"
-          v-for="item in conversationList" :key="`${item.targetId}&${item.conversationType}`"
-          @click="handleConversationChange(item)" 
-          >
-          <div class="rong-chat-conversation-header">
-            <span class="" style="font-size: 14px; font-weight: bold;">{{ item.targetId }}</span>
-            <span>{{ item.unreadMessageCount && item.unreadMessageCount > 0 ? item.unreadMessageCount : ''}}</span>
-          </div>
-          <div class="rong-chat-conversation-content">
-            <span class="message">{{ item.latestMessage?.content.content }}</span>
-            <span class="time">{{ timestampToDateTime(item.latestMessage?.sentTime) }}</span>
+        <div class="rong-chat-conversation-box">
+          <div class="rong-chat-conversation"
+            v-for="item in conversationList" :key="`${item.targetId}&${item.conversationType}`"
+            @click="handleConversationChange(item)" 
+            >
+            <div class="rong-chat-conversation-header">
+              <span class="" style="font-size: 14px; font-weight: bold;">{{ item.targetId }}</span>
+              <span>{{ item.unreadMessageCount && item.unreadMessageCount > 0 ? item.unreadMessageCount : ''}}</span>
+            </div>
+            <div class="rong-chat-conversation-content">
+              <span class="message">{{ item.latestMessage?.content.content }}</span>
+              <span class="time">{{ timestampToDateTime(item.latestMessage?.sentTime) }}</span>
+            </div>
           </div>
         </div>
+        
       </div>
       <div v-if="curConversation" class="rong-chat-right">
         <div class="rong-chat-name">
@@ -106,7 +109,8 @@ const handleDisconnect = () => {
   width: 20%;
   border-right: 1px solid #fff;
   height: 100%;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 .rong-chat-right {
   flex: 1;
@@ -121,6 +125,10 @@ const handleDisconnect = () => {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+.rong-chat-conversation-box {
+  flex: 1;
+  overflow-y: auto;
 }
 .rong-chat-conversation {
   padding: 5px 20px;
@@ -164,6 +172,7 @@ const handleDisconnect = () => {
 .rong-chat-message {
   display: flex;
   align-items: center;
+  margin-bottom: 5px;
 }
 .rong-author {
   width: 45px;
@@ -179,7 +188,7 @@ const handleDisconnect = () => {
 .rong-chat-message-content {
   background-color: #fff;
   color: #333;
-  margin: 10px;
+  margin: 5px;
   padding: 10px;
   border-radius: 5px;
   max-width: 70%;
@@ -189,6 +198,10 @@ const handleDisconnect = () => {
   flex-direction: row-reverse;
 }
 .is-self .rong-chat-message-content {
+  background-color: #b4b3b3;
+  color: #fff;
+}
+.is-self .rong-author {
   background-color: #b4b3b3;
   color: #fff;
 }

@@ -21,7 +21,7 @@ let pullOffLineMessageFinished = false;
 export const initIMLib = (appkey: string, navi: string, environment: string) => {
   init({
     appkey,
-    navigators: navi ? [navi] : undefined,
+    navigators: navi ? navi.split(',') : undefined,
     environment: environment? environment : undefined,
   });
 
