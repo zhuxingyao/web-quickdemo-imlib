@@ -18,10 +18,11 @@ let pullOffLineMessageFinished = false;
  * @param appkey 
  * @param navi 
  */
-export const initIMLib = (appkey: string, navi: string,) => {
+export const initIMLib = (appkey: string, navi: string, environment: string) => {
   init({
     appkey,
     navigators: navi ? [navi] : undefined,
+    environment: environment? environment : undefined,
   });
 
   // 监听 IMLib 事件
@@ -63,11 +64,11 @@ export const initIMLib = (appkey: string, navi: string,) => {
  * @param token
  * @param navi
  */
-export const connectSocket = (appkey: string, token: string, navi: string):Promise<IAsyncRes<{
+export const connectSocket = (appkey: string, token: string, navi: string, environment: string):Promise<IAsyncRes<{
   userId: string;
 }>> => {
   return new Promise( async (resolve) => {
-    initIMLib(appkey, navi);
+    initIMLib(appkey, navi, environment);
     const { code, data } = await connect(token);
     resolve({ code, data });
   });

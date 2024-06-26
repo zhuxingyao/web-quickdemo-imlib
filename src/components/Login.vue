@@ -11,7 +11,7 @@ const environment = ref<string>('');
 
 
 const connect = async () => {
-  const { code, data } = await connectSocket(appkey.value, token.value, navigators.value);
+  const { code, data } = await connectSocket(appkey.value, token.value, navigators.value, environment.value);
   if (code === ErrorCode.SUCCESS) {
     curUserId.value = data!.userId;
   }
