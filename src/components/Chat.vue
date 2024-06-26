@@ -2,13 +2,10 @@
 import { ref } from 'vue';
 import { IAReceivedConversation, MessageDirection } from '@rongcloud/imlib-next';
 import { conversationList, timestampToDateTime, curConversation, historyMessages } from '../assets/context';
-import { _getHistoryMessages, _sendMessage } from '../assets/im';
-import { curUserId } from '../assets/context';
+import { _getHistoryMessages, _sendMessage, _disConnect } from '../assets/im';
+import { curUserId, scrollContainer, scrollContent } from '../assets/context';
 
 const message = ref<string>('');
-const scrollContainer = ref<HTMLDivElement>();
-const scrollContent = ref<HTMLDivElement>();
-
 
 const handleConversationChange = async (item:IAReceivedConversation) => {
   const { targetId, conversationType, channelId } = item;
@@ -22,23 +19,29 @@ const handleConversationChange = async (item:IAReceivedConversation) => {
 }
 
 const handleSendMessage = async() => {
-  if (!scrollContainer.value || !scrollContent.value) return
   await _sendMessage(message.value);
   message.value = '';
-  scrollContainer.value.scrollTop = scrollContent.value.scrollHeight;
 }
 
+const handleDisconnect = () => {
+  _disConnect();
+  curUserId.value = ''
+}
 
 </script>
 <template>
   <div class="rong-chat">
     <div class="rong-chat-box">
       <div class="rong-chat-left">
+        <div class="rong-self-info">{{ curUserId }}</div>
         <div class="rong-chat-conversation"
           v-for="item in conversationList" :key="`${item.targetId}&${item.conversationType}`"
           @click="handleConversationChange(item)" 
           >
-          <div class="rong-chat-conversation-title">{{ item.targetId }}</div>
+          <div class="rong-chat-conversation-header">
+            <span class="" style="font-size: 14px; font-weight: bold;">{{ item.targetId }}</span>
+            <span>{{ item.unreadMessageCount && item.unreadMessageCount > 0 ? item.unreadMessageCount : ''}}</span>
+          </div>
           <div class="rong-chat-conversation-content">
             <span class="message">{{ item.latestMessage?.content.content }}</span>
             <span class="time">{{ timestampToDateTime(item.latestMessage?.sentTime) }}</span>
@@ -69,13 +72,16 @@ const handleSendMessage = async() => {
         <div class="rong-chat-editor">
           <div class="rong-chat-editor-extra">
             <button @click="handleSendMessage">发送</button>
+            <button @click="handleDisconnect">断开连接</button>
           </div>
           <div class="rong-chat-editor-input">
             <textarea placeholder="请输入消息" v-model="message"></textarea>
           </div>
         </div>
       </div>
-      <div v-else class="rong-chat-right"></div>
+      <div v-else class="rong-chat-right">
+        <h3 style="margin-left: 30px;">还没有选中会话，获取历史消息...</h3>
+      </div>
     </div>
   </div>
 </template>
@@ -108,6 +114,14 @@ const handleSendMessage = async() => {
   flex-direction: column;
   overflow: hidden;
 }
+.rong-self-info {
+  padding: 0 20px;
+  border-bottom: 1px solid #fff;
+  line-height: 50px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 .rong-chat-conversation {
   padding: 5px 20px;
   cursor: pointer;
@@ -115,9 +129,11 @@ const handleSendMessage = async() => {
 .rong-chat-conversation:hover {
   background-color: #b4b3b3;
 }
-.rong-chat-conversation .rong-chat-conversation-title {
-  font-size: 16px;
-  font-weight: bold;
+.rong-chat-conversation .rong-chat-conversation-header {
+  font-size: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 .rong-chat-conversation-content {
   display: flex;
@@ -184,7 +200,10 @@ const handleSendMessage = async() => {
 .rong-chat-editor-extra {
   padding: 5px;
   display: flex;
-  justify-content: flex-end;
+  /* justify-content: flex-end; */
+}
+.rong-chat-editor-extra button{
+  margin: 0 5px;
 }
 
 .rong-chat-editor-input {

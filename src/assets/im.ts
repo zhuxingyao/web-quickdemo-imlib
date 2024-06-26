@@ -1,12 +1,17 @@
 import {
   init, connect, Events, getConversationList, ErrorCode, addEventListener,
   getHistoryMessages, sendMessage, IAsyncRes, IConversationOption, GetHistoryMessageOption,
-  TextMessage,
+  TextMessage, disconnect, destroy,
 } from '@rongcloud/imlib-next';
 import { 
   conversationList, historyMessages, hasMore, curConversation,
-  updateMessageList,
+  updateMessageList, updateConversationList,
 } from './context';
+
+/**
+ * 记录拉取离线消息是否完成
+ */
+let pullOffLineMessageFinished = false;
 
 /**
  * 初始化
@@ -20,13 +25,34 @@ export const initIMLib = (appkey: string, navi: string,) => {
   });
 
   // 监听 IMLib 事件
-  addEventListener(Events.CONNECTED, () => { });
-  addEventListener(Events.DISCONNECT, () => { });
-  addEventListener(Events.SUSPEND, () => { });
-  addEventListener(Events.CONNECTING, () => { });
-  addEventListener(Events.MESSAGES, (evt) => { });
+  addEventListener(Events.CONNECTING, () => {
+    console.log('正在连接中');
+  });
+  addEventListener(Events.CONNECTED, () => {
+    console.log('连接成功了');
+  });
+  addEventListener(Events.DISCONNECT, ( code: ErrorCode) => {
+    console.log(`断开连接了 ${code}}`);
+  });
+  addEventListener(Events.SUSPEND, (code: ErrorCode) => {
+    console.log(`异常断开, SDK 会自动重连, 异常原因：${code}}`);
+  });
+  addEventListener(Events.MESSAGES, (evt) => {
+    // 忽略离线消息导致的 MESSAGES 事件
+    if (!pullOffLineMessageFinished) return
+    console.log(`收到新的消息`, evt);
+    updateMessageList(evt.messages);
+  });
+  addEventListener(Events.CONVERSATION, (evt) => {
+    // 忽略离线消息导致的 CONVERSATION 事件
+    if (!pullOffLineMessageFinished) return
+    console.log(`会话列表更新`, evt);
+    const conversations = evt.conversationList.map((item) => item.conversation);
+    updateConversationList(conversations);
+  });
   addEventListener(Events.PULL_OFFLINE_MESSAGE_FINISHED, () => {
-    console.log('PULL_OFFLINE_MESSAGE_FINISHED');
+    console.log('离线消息拉取完成');
+    pullOffLineMessageFinished = true;
     _getConversationList();
   });
 };
@@ -41,7 +67,7 @@ export const connectSocket = (appkey: string, token: string, navi: string):Promi
   userId: string;
 }>> => {
   return new Promise( async (resolve) => {
-    await initIMLib(appkey, navi);
+    initIMLib(appkey, navi);
     const { code, data } = await connect(token);
     resolve({ code, data });
   });
@@ -53,6 +79,7 @@ export const connectSocket = (appkey: string, token: string, navi: string):Promi
 export const _getConversationList = async () => {
   const { code, data } = await getConversationList();
   if (code === ErrorCode.SUCCESS) {
+    console.log('获取会话列表成功');
     conversationList.value = data || [];
   }
 }
@@ -68,6 +95,9 @@ export const _getHistoryMessages = async (conv: IConversationOption, option?: Ge
   }
 }
 
+/**
+ * 发送消息
+ */
 export const _sendMessage = async (content: string) => {
   if (!curConversation.value) return;
   const message = new TextMessage({ content });
@@ -80,4 +110,8 @@ export const _sendMessage = async (content: string) => {
     console.log('发送消息成功');
     updateMessageList([data!]);
   }
+}
+
+export const _disConnect = async () => {
+  await destroy()
 }

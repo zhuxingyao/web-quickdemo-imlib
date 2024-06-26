@@ -16,7 +16,7 @@ const connect = async () => {
     curUserId.value = data!.userId;
   }
 }
-</script>s
+</script>
 <template>
 <div class="rong-login">
   <div class="rong-login-form">
